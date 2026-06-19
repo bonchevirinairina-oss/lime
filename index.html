@@ -353,46 +353,58 @@ th.srt .si{opacity:1;}
     </div>
 
     <!-- KPI CHIPS -->
-    <div class="kpi-row" id="kpiRow">
+    <div id="kpiRow" class="kpi-row">
       <div class="kpi">
         <div class="kpi-bar" style="background:var(--ac)"></div>
-        <div class="kpi-label">Всего сотрудников</div>
-        <div class="kpi-val" id="kTotal" style="color:var(--ac)">—</div>
-        <div class="kpi-sub" id="kTotalSub">принятых за период</div>
+        <div class="kpi-label">Сотрудников</div>
+        <div class="kpi-val" id="kOver14" style="color:var(--ac)">—</div>
+        <div class="kpi-sub">более 14 дней в компании</div>
       </div>
       <div class="kpi">
         <div class="kpi-bar" style="background:var(--ylw)"></div>
-        <div class="kpi-label">До 14 дней в адаптации</div>
-        <div class="kpi-val" id="k14" style="color:var(--ylw)">—</div>
-        <div class="kpi-sub">1–14 день с даты приёма</div>
-      </div>
-      <div class="kpi" id="kPlanProgCard">
-        <div class="kpi-bar" style="background:var(--grn)"></div>
-        <div class="kpi-label">Ср. прогресс плана</div>
-        <div class="kpi-val" id="kPlanProg" style="color:var(--grn)">—</div>
-        <div class="kpi-sub" id="kPlanProgSub">по заполненным</div>
-      </div>
-      <div class="kpi" id="kPlanCard">
-        <div class="kpi-bar" style="background:#6b8e9f"></div>
-        <div class="kpi-label">С планом адаптации</div>
-        <div class="kpi-val" id="kPlan" style="color:#6b8e9f">—</div>
-        <div class="kpi-sub" id="kPlanSub">из — сотрудников</div>
+        <div class="kpi-label">Сотрудников</div>
+        <div class="kpi-val" id="kUnder14" style="color:var(--ylw)">—</div>
+        <div class="kpi-sub">менее 14 дней в компании</div>
       </div>
       <div class="kpi">
         <div class="kpi-bar" style="background:var(--grn)"></div>
-        <div class="kpi-label">Успешно check-up (≥75)</div>
+        <div class="kpi-label">Прошли адаптацию</div>
+        <div class="kpi-val" id="kDoneAdapt" style="color:var(--grn)">—</div>
+        <div class="kpi-sub" id="kDoneAdaptSub">из — чел.</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:4px;line-height:1.5">Закрытый план адаптации ≥90%<br>Check-up ≥75%</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-bar" style="background:#6b8e9f"></div>
+        <div class="kpi-label">Прогресс плана (≥90%)</div>
+        <div class="kpi-val" id="kPlanProg" style="color:#6b8e9f">—</div>
+        <div class="kpi-sub" id="kPlanProgSub">прохождение задач и курсов</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-bar" style="background:var(--grn)"></div>
+        <div class="kpi-label">Успешно Check-up (≥75%)</div>
         <div class="kpi-val" id="kCu75" style="color:var(--grn)">—</div>
-        <div class="kpi-sub" id="kCuDoneSub">из завершивших</div>
+        <div class="kpi-sub" id="kCuDoneSub">из — сотрудников</div>
       </div>
       <div class="kpi" id="kCuFailCard" style="border-color:#e53935;background:linear-gradient(135deg,#fff5f5 0%,var(--sf) 100%)">
         <div class="kpi-bar" style="background:#e53935"></div>
-        <div class="kpi-label" style="color:#e53935">Не прошли check-up</div>
+        <div class="kpi-label" style="color:#e53935">Не заполнен Check-up</div>
         <div class="kpi-val" id="kCuFail" style="color:#e53935">—</div>
         <div class="kpi-sub" id="kCuFailSub" style="color:#e53935">из — сотрудников</div>
       </div>
+      <div class="kpi">
+        <div class="kpi-bar" style="background:var(--pur)"></div>
+        <div class="kpi-label">Опрос 14 дней</div>
+        <div class="kpi-val" id="kSurvey14Avg" style="color:var(--pur)">—</div>
+        <div class="kpi-sub">удовлетворённость адаптацией</div>
+      </div>
+      <div id="kTotal" style="display:none"></div>
+      <div id="kTotalSub" style="display:none"></div>
+      <div id="kPlan" style="display:none"></div>
+      <div id="kPlanSub" style="display:none"></div>
       <div id="kCuDone" style="display:none"></div>
-
-
+      <div id="k14" style="display:none"></div>
+      <div id="kPlanProgUnder" style="display:none"></div>
+      <div id="kPlanProgUnderSub" style="display:none"></div>
     </div>
 
     <!-- SUB TABS -->
@@ -1048,27 +1060,66 @@ function resetFilters(){
 // ═══════════════ KPIs ════════════════════════════════════════
 function renderKPIs(){
   const d=filteredData;
-  const total=d.length;
-  document.getElementById('kTotal').textContent=total;
-  document.getElementById('k14').textContent=d.filter(r=>r['Дней работы']<=14).length;
-  const cuDone=d.filter(r=>r['Check-up статус']==='Завершено');
-  document.getElementById('kCuDone').textContent=cuDone.length;
-  document.getElementById('kCuDoneSub').textContent=`из ${total} завершили`;
-  document.getElementById('kCu75').textContent=d.filter(r=>{const b=parseFloat(r['Check-up балл']);return !isNaN(b)&&b>=75;}).length;
-  const cuFail=d.filter(r=>r['Check-up статус']!=='Завершено').length;
-  document.getElementById('kCuFail').textContent=cuFail;
-  document.getElementById('kCuFailSub').textContent=`из ${total} сотрудников`;
-  // План адаптации
-  const withProg=d.filter(r=>r['План прогресс']);
-  document.getElementById('kPlan').textContent=withProg.length;
-  document.getElementById('kPlanSub').textContent=`из ${total} сотрудников`;
-  let sumP=0; withProg.forEach(r=>{const p=parseFloat(String(r['План прогресс']).replace('%',''));if(!isNaN(p))sumP+=p;});
-  const avgP=withProg.length?Math.round(sumP/withProg.length):0;
-  document.getElementById('kPlanProg').textContent=avgP?avgP+'%':'—';
-  document.getElementById('kPlanProgSub').textContent=withProg.length?`${withProg.length} чел. заполнили`:'нет данных';
-  // Survey risk chip сбрасываем — он обновится при открытии вкладки опросов
-  const src=document.getElementById('kSurveyRiskCard');
-  if(src) src.style.display='none';
+
+  // Две группы
+  const over14 = d.filter(r=>r['Дней работы']>14);
+  const under14 = d.filter(r=>r['Дней работы']<=14);
+
+  // Группа 1: >14 дней
+  document.getElementById('kOver14').textContent = over14.length;
+
+  // Прошли адаптацию: план ≥90% И чек-ап ≥75%
+  const doneAdapt = over14.filter(r=>{
+    const plan = parseFloat(String(r['План прогресс']||'').replace('%',''))||0;
+    const cu = parseFloat(r['Check-up балл']||0)||0;
+    return plan>=90 && cu>=75;
+  });
+  const pctDone = over14.length ? Math.round(doneAdapt.length/over14.length*100) : 0;
+  document.getElementById('kDoneAdapt').textContent = pctDone+'%';
+  document.getElementById('kDoneAdaptSub').textContent = 'из '+over14.length+' чел.';
+
+  // Прогресс плана (>14 дней)
+  const withProgOver = over14.filter(r=>r['План прогресс']);
+  let sumPO=0; withProgOver.forEach(r=>{const p=parseFloat(String(r['План прогресс']).replace('%',''));if(!isNaN(p))sumPO+=p;});
+  const avgPO = withProgOver.length?Math.round(sumPO/withProgOver.length):0;
+  document.getElementById('kPlanProg').textContent = avgPO?avgPO+'%':'—';
+  document.getElementById('kPlanProgSub').textContent = 'прохождение задач и курсов';
+
+  // Чек-ап
+  const cuDone = over14.filter(r=>r['Check-up статус']==='Завершен');
+  const cu75 = over14.filter(r=>parseFloat(r['Check-up балл']||0)>=75).length;
+  const pctCu75 = over14.length?Math.round(cu75/over14.length*100):0;
+  document.getElementById('kCu75').textContent = pctCu75+'%';
+  document.getElementById('kCuDoneSub').textContent = cu75+' из '+over14.length+' сотрудников';
+
+  const cuFail = over14.filter(r=>r['Check-up статус']!=='Завершен').length;
+  const pctCuFail = over14.length?Math.round(cuFail/over14.length*100):0;
+  document.getElementById('kCuFail').textContent = pctCuFail+'%';
+  document.getElementById('kCuFailSub').textContent = cuFail+' из '+over14.length+' сотрудников';
+
+  // Опрос 14 день — ср. оценка Q2
+  const p14 = (SURVEY_DATA&&SURVEY_DATA.p14)||[];
+  const selStore = document.getElementById('fStore')?.value||'';
+  const filtP14 = selStore ? p14.filter(p=>{
+    const pm=(p.m||'').toLowerCase(), sm=selStore.toLowerCase();
+    return pm===sm||pm.includes(sm)||sm.includes(pm);
+  }) : p14;
+  const q2vals = filtP14.map(p=>parseFloat(p.ans&&p.ans['2'])).filter(v=>!isNaN(v));
+  const avgQ2 = q2vals.length?Math.round(q2vals.reduce((a,b)=>a+b,0)/q2vals.length*10)/10:null;
+  document.getElementById('kSurvey14Avg').textContent = avgQ2!==null?avgQ2+' / 5':'—';
+
+  // Группа 2: ≤14 дней
+  document.getElementById('kUnder14').textContent = under14.length;
+  const withProgUnder = under14.filter(r=>r['План прогресс']);
+  let sumPU=0; withProgUnder.forEach(r=>{const p=parseFloat(String(r['План прогресс']).replace('%',''));if(!isNaN(p))sumPU+=p;});
+  const avgPU = withProgUnder.length?Math.round(sumPU/withProgUnder.length):0;
+  document.getElementById('kPlanProgUnder').textContent = avgPU?avgPU+'%':'—';
+  document.getElementById('kPlanProgUnderSub').textContent = withProgUnder.length?withProgUnder.length+' чел. заполнили':'нет данных';
+
+  // Reset survey banners
+  ['sv7RiskBanner','sv14RiskBanner'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.style.display='none';
+  });
 }
 
 // ═══════════════ SUB TABS ════════════════════════════════════
@@ -1125,125 +1176,115 @@ function renderActiveSub(){
 // ═══════════════ ПЛАН АДАПТАЦИИ ══════════════════════════════════
 function renderPlan(){
   const d = filteredData;
-  const withProg = d.filter(r => r['План прогресс']);
-  const inProgress = d.filter(r => r['План статус'] === 'В процессе');
-
-  // Avg progress only from those who actually have it
-  let sumP = 0;
-  withProg.forEach(r => {
-    const p = parseFloat(String(r['План прогресс']).replace('%',''));
-    if(!isNaN(p)) sumP += p;
-  });
-  const avgProg = withProg.length ? Math.round(sumP / withProg.length) : 0;
 
   if(storeMode){
-    // Конкретный магазин — KPI чипсы + таблица сотрудников
+    // ── Конкретный магазин: таблица по сотрудникам ──
     document.getElementById('planSummaryCard').style.display = 'none';
-    document.getElementById('planEmpCard').style.display = '';
     document.getElementById('planStoresCard').style.display = 'none';
+    document.getElementById('planEmpCard').style.display = '';
 
-    document.getElementById('planSummaryBody').innerHTML = `
-      <div style="display:flex;flex-wrap:wrap;gap:12px;padding:8px 16px">
-        <div style="flex:1;min-width:110px;background:var(--bg);border-radius:10px;padding:14px 16px">
-          <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;margin-bottom:4px">С планом</div>
-          <div style="font-size:28px;font-weight:800;color:var(--ac)">${withProg.length}</div>
-          <div style="font-size:11px;color:var(--tx3)">из ${d.length} сотр.</div>
-        </div>
-        <div style="flex:1;min-width:110px;background:var(--bg);border-radius:10px;padding:14px 16px">
-          <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;margin-bottom:4px">В процессе</div>
-          <div style="font-size:28px;font-weight:800;color:#6b8e9f">${inProgress.length}</div>
-          <div style="font-size:11px;color:var(--tx3)">активных планов</div>
-        </div>
-        <div style="flex:1;min-width:110px;background:var(--bg);border-radius:10px;padding:14px 16px">
-          <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;margin-bottom:4px">Ср. прогресс</div>
-          <div style="font-size:28px;font-weight:800;color:var(--grn)">${avgProg}%</div>
-          <div style="font-size:11px;color:var(--tx3)">по заполненным</div>
-        </div>
-      </div>`;
-
-    // Employee table
-    const sorted = [...d].sort((a,b) => {
-      const pa = parseFloat(String(a['План прогресс']).replace('%','')) || 0;
-      const pb = parseFloat(String(b['План прогресс']).replace('%','')) || 0;
-      return pb - pa;
+    const sorted = [...d].sort((a,b)=>{
+      const pa=parseFloat(String(a['План прогресс']).replace('%',''))||0;
+      const pb=parseFloat(String(b['План прогресс']).replace('%',''))||0;
+      return pb-pa;
     });
-    document.getElementById('planEmpTbody').innerHTML = sorted.map(r => {
-      const prog = r['План прогресс'] || '—';
-      const progNum = parseFloat(String(prog).replace('%','')) || 0;
-      const tasks = r['План задачи'] || '—';
-      const stat = r['План статус'] || '—';
-      const statColor = stat === 'В процессе' ? '#4a7c59' : 'var(--tx3)';
-      const statBg = stat === 'В процессе' ? '#edf7f0' : 'var(--bg)';
-      const barW = Math.min(progNum, 100);
-      const barColor = progNum >= 80 ? 'var(--grn)' : progNum >= 50 ? '#d97706' : '#e53935';
+
+    document.getElementById('planEmpTbody').innerHTML = sorted.map(r=>{
+      const prog = r['План прогресс']||'';
+      const progNum = parseFloat(String(prog).replace('%',''))||0;
+      const tasks = r['План задачи']||'';
+      const stat = r['План статус']||'';
+      const statColor = stat==='В процессе'?'#4a7c59':'var(--tx3)';
+      const statBg = stat==='В процессе'?'#edf7f0':'transparent';
+      const barColor = progNum>=90?'var(--grn)':progNum>=60?'#d97706':'#e53935';
       return `<tr>
         <td style="font-weight:600">${r['ФИО']}</td>
         <td style="color:var(--tx3);font-size:12px">${r['Должность']||''}</td>
         <td style="text-align:center;color:var(--tx3)">${r['Дней работы']||0}</td>
-        <td style="min-width:140px">
-          ${prog === '—' ? '<span style="color:var(--tx3)">—</span>' : `
-          <div style="display:flex;align-items:center;gap:8px">
+        <td style="min-width:160px">
+          ${prog?`<div style="display:flex;align-items:center;gap:8px">
             <div style="flex:1;height:6px;background:var(--bd);border-radius:3px">
-              <div style="width:${barW}%;height:100%;background:${barColor};border-radius:3px"></div>
+              <div style="width:${Math.min(progNum,100)}%;height:100%;background:${barColor};border-radius:3px"></div>
             </div>
             <span style="font-size:12px;font-weight:700;min-width:36px">${prog}</span>
-          </div>`}
+          </div>`:'<span style="color:var(--tx3)">—</span>'}
         </td>
-        <td style="text-align:center;font-size:12px;color:var(--tx3)">${tasks}</td>
-        <td><span style="font-size:11px;font-weight:700;color:${statColor};background:${statBg};padding:3px 8px;border-radius:6px">${stat}</span></td>
+        <td style="text-align:center;font-size:12px;font-weight:600;color:var(--tx3)">${tasks||'—'}</td>
+        <td><span style="font-size:11px;font-weight:700;color:${statColor};background:${statBg};padding:3px 8px;border-radius:6px">${stat||'—'}</span></td>
       </tr>`;
     }).join('');
 
+    // Update thead
+    document.querySelector('#planEmpCard table thead tr').innerHTML = `
+      <th>Сотрудник</th>
+      <th>Должность</th>
+      <th>Дней</th>
+      <th style="min-width:160px">Прогресс курсов и задач</th>
+      <th>Закрытых задач</th>
+      <th>Статус</th>`;
+
   } else {
-    // Все магазины — только таблица по магазинам
+    // ── Все магазины: таблица по магазинам ──
     document.getElementById('planSummaryCard').style.display = 'none';
     document.getElementById('planEmpCard').style.display = 'none';
     document.getElementById('planStoresCard').style.display = '';
 
     // Group by store
     const storeMap = {};
-    d.forEach(r => {
-      const s = r['Магазин'] || 'Без магазина';
-      if(!storeMap[s]) storeMap[s] = {count:0, progList:[], inProg:0};
-      storeMap[s].count++;
+    d.forEach(r=>{
+      const s = r['Магазин']||'Без магазина';
+      if(!storeMap[s]) storeMap[s]={total:0, withPlan:0, inProg:0, progList:[]};
+      storeMap[s].total++;
       const p = parseFloat(String(r['План прогресс']).replace('%',''));
-      if(!isNaN(p) && r['План прогресс']) storeMap[s].progList.push(p);
-      if(r['План статус']==='В процессе') storeMap[s].inProg++;
+      if(!isNaN(p) && r['План прогресс']){
+        storeMap[s].withPlan++;
+        storeMap[s].progList.push(p);
+        if(r['План статус']==='В процессе') storeMap[s].inProg++;
+      }
     });
 
-    const stores = Object.entries(storeMap).map(([name, s]) => {
-      const avg = s.progList.length ? Math.round(s.progList.reduce((a,b)=>a+b,0)/s.progList.length) : 0;
-      return {name, total: s.count, withPlan: s.progList.length, inProg: s.inProg, avg};
-    }).sort((a,b) => b.avg - a.avg || b.withPlan - a.withPlan);
+    const stores = Object.entries(storeMap).map(([name,s])=>({
+      name,
+      total: s.total,
+      withPlan: s.withPlan,
+      inProg: s.inProg,
+      avg: s.progList.length?Math.round(s.progList.reduce((a,b)=>a+b,0)/s.progList.length):0
+    })).sort((a,b)=>b.avg-a.avg||b.withPlan-a.withPlan);
 
-    const maxAvg = stores.find(s=>s.avg>0)?.avg || 1;
+    const maxAvg = stores.find(s=>s.avg>0)?.avg||1;
 
     document.getElementById('planStoresTitle').textContent = 'По магазинам — план адаптации';
     document.getElementById('planStoresBody').innerHTML = `
-      <table class="cu-table">
-        <thead><tr>
-          <th>Магазин</th>
-          <th>С планом</th>
-          <th>В процессе</th>
-          <th style="min-width:160px">Ср. прогресс</th>
-        </tr></thead>
-        <tbody>${stores.map(s => {
-          const barW = s.avg ? Math.round(s.avg/maxAvg*100) : 0;
-          const barColor = s.avg >= 80 ? 'var(--grn)' : s.avg >= 50 ? '#d97706' : s.avg > 0 ? '#e53935' : 'var(--bd)';
-          return `<tr>
-            <td style="font-weight:600">${s.name}</td>
-            <td style="text-align:center">${s.withPlan ? s.withPlan + ' из ' + s.total : '—'}</td>
-            <td style="text-align:center">${s.inProg || '—'}</td>
-            <td>
-              ${s.avg ? `<div style="display:flex;align-items:center;gap:8px">
-                <div style="flex:1;height:6px;background:var(--bd);border-radius:3px">
-                  <div style="width:${barW}%;height:100%;background:${barColor};border-radius:3px"></div>
-                </div>
-                <span style="font-size:12px;font-weight:700;min-width:36px">${s.avg}%</span>
-              </div>` : '<span style="color:var(--tx3)">—</span>'}
-            </td>
-          </tr>`;
-        }).join('')}</tbody>
+      <table style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr style="border-bottom:2px solid var(--bd)">
+            <th style="text-align:left;padding:10px 16px;font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase">Магазин</th>
+            <th style="text-align:center;padding:10px 8px;font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase">Планов</th>
+            <th style="text-align:center;padding:10px 8px;font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase">В процессе</th>
+            <th style="text-align:left;padding:10px 16px;font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;min-width:200px">Ср. прогресс</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${stores.map(s=>{
+            const barW = s.avg?Math.round(s.avg/maxAvg*100):0;
+            const barColor = s.avg>=90?'var(--grn)':s.avg>=60?'#d97706':s.avg>0?'#e53935':'var(--bd)';
+            return `<tr style="border-bottom:1px solid var(--bd)">
+              <td style="padding:10px 16px;font-weight:600;font-size:13px">${s.name}</td>
+              <td style="text-align:center;padding:10px 8px;font-size:13px">${s.withPlan?s.withPlan+' из '+s.total:'—'}</td>
+              <td style="text-align:center;padding:10px 8px">
+                ${s.inProg?`<span style="font-size:12px;font-weight:700;color:#4a7c59;background:#edf7f0;padding:2px 10px;border-radius:6px">${s.inProg}</span>`:'<span style="color:var(--tx3)">—</span>'}
+              </td>
+              <td style="padding:10px 16px">
+                ${s.avg?`<div style="display:flex;align-items:center;gap:10px">
+                  <div style="flex:1;height:8px;background:var(--bd);border-radius:4px">
+                    <div style="width:${barW}%;height:100%;background:${barColor};border-radius:4px"></div>
+                  </div>
+                  <span style="font-size:13px;font-weight:700;min-width:40px;color:${barColor}">${s.avg}%</span>
+                </div>`:'<span style="color:var(--tx3)">—</span>'}
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
       </table>`;
   }
 }
